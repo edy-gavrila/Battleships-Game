@@ -1,5 +1,5 @@
-import { isInRange } from "./helperFunc";
 import Player from "./Player";
+import Ship from "./Ship";
 
 const GameLoop = (stateUpdateHandler) => {
   let player1 = null;
@@ -8,14 +8,37 @@ const GameLoop = (stateUpdateHandler) => {
   let nextPlayer = null;
   let winner = null;
 
-  const buildStateObject = () => ({
-    player1,
-    player2,
-    gameState,
-    nextPlayer,
-    winner,
-    error: null,
-  });
+  const buildStateObject = () => {
+    const buildPlayerData = (player) => {
+      if (player) {
+        const playerType = player.isComputerPlayer ? "cpu" : "human";
+        return {
+          name: player.name,
+          boardMap: player.gameboard.getBoardMap(),
+          attacksList: player.attacksList,
+          playerType,
+        };
+      }
+      return null;
+    };
+    let player1Data = buildPlayerData(player1) || null;
+    let player2Data = buildPlayerData(player2) || null;
+    let nextPlayerData = buildPlayerData(nextPlayer) || null;
+    let winnerData = buildPlayerData(winner) || null;
+
+    return {
+      player1: player1Data,
+      player2: player2Data,
+      gameState,
+      nextPlayer: nextPlayerData,
+      winner: winnerData,
+      error: null,
+    };
+  };
+
+  const buildStateObjectWithError = (errorMsg) => {
+    return { ...buildStateObject(), error: { message: errorMsg } };
+  };
 
   const initGame = (name1 = "Mistery Player", name2 = "CPU Player") => {
     if (!stateUpdateHandler || typeof stateUpdateHandler !== "function") {
@@ -43,17 +66,26 @@ const GameLoop = (stateUpdateHandler) => {
     winner && (gameState = "gameState/over");
   };
 
-  //checks if square at specified coords had already been hit
-  const isMoveLegal = (player, coords) => {
-    const [x, y] = coords;
-    if (!player || !isInRange(x, 0, 9) || !isInRange(y, 0, 9)) {
+  const isStrikeOnCPULegal = (coords) => {
+    return player1.isStrikeLegal(coords);
+  };
+  const isStrikeOnHumanLegal = (coords) => {
+    return player2.isStrikeLegal(coords);
+  };
+
+  const isHitOnCPUShips = (coords) => {
+    return player2.gameboard.isHitOnShip(coords);
+  };
+  const isHitOnHumanShips = (coords) => {
+    return player1.gameboard.isHitOnShip(coords);
+  };
+
+  //checks if placing a ship at the given coords is legal
+  const isShipPlacementLegal = (shipLength, coords, orient) => {
+    if (gameState !== "gameState/initial") {
       return false;
     }
-    const boardMap = player.gameboard.getBoardMap();
-    if (!/X/.test(boardMap[x][y])) {
-      return true;
-    }
-    return false;
+    return player1.gameboard.isPositionLegal(Ship(shipLength), coords, orient);
   };
 
   const gameAction = ({ type, payload }) => {
@@ -71,29 +103,42 @@ const GameLoop = (stateUpdateHandler) => {
           break;
         }
         if (gameState !== "gameState/initial") {
-          stateUpdateHandler({
-            ...buildStateObject(),
-            error: { message: "Game not initialized!" },
-          });
+          stateUpdateHandler(
+            buildStateObjectWithError("Game not initialized!")
+          );
           break;
         }
         if (!player1 || !player2) {
-          stateUpdateHandler({
-            ...buildStateObject(),
-            error: { message: "Invalid players!" },
-          });
+          stateUpdateHandler(buildStateObjectWithError("Invalid Players!"));
           break;
         }
         if (player1.gameboard.ships.length < 6) {
-          stateUpdateHandler({
-            ...buildStateObject(),
-            error: { message: "Human player board not populated with ships!" },
-          });
+          stateUpdateHandler(
+            buildStateObjectWithError(
+              "Human player board not populated with ships!"
+            )
+          );
           break;
         }
         startGame();
         stateUpdateHandler(buildStateObject());
         break;
+
+      case "gameLoop/placeShip":
+        const coords = payload.coords;
+        const newShip = Ship(payload.shipLength);
+        const orient = payload.orient;
+
+        if (player1.gameboard.isPositionLegal(newShip, coords, orient)) {
+          player1.gameboard.placeShip(newShip, coords, orient);
+          stateUpdateHandler(buildStateObject());
+          break;
+        }
+        stateUpdateHandler(
+          buildStateObjectWithError("Ship placement unsuccessful!")
+        );
+        break;
+
       case "gameLoop/placeShipsRandomly":
         if (gameState !== "gameState/initial") {
           stateUpdateHandler({
@@ -129,7 +174,7 @@ const GameLoop = (stateUpdateHandler) => {
         }
 
         if (payload.playerType === "cpu") {
-          player2.cpuAttack(player1);
+          player2.cpuAttack(player1, payload.coords);
           nextPlayer = player1;
         }
         assessGame();
@@ -146,7 +191,11 @@ const GameLoop = (stateUpdateHandler) => {
 
   return {
     gameAction,
-    isMoveLegal,
+    isShipPlacementLegal,
+    isStrikeOnCPULegal,
+    isStrikeOnHumanLegal,
+    isHitOnCPUShips,
+    isHitOnHumanShips,
   };
 };
 

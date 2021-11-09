@@ -66,6 +66,7 @@ describe("Player factory function tests", () => {
       player2.attack(player1, [6, 6]);
       player2.attack(player1, [9, 9]);
       player2.attack(player1, [0, 0]);
+      console.log(player2.attacksList);
       expect(player2.attacksList.length).toBe(4);
       expect(player2.attacksList[0]).toEqual([3, 5]);
       expect(player2.attacksList[1]).toEqual([6, 6]);

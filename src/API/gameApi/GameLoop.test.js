@@ -2,7 +2,6 @@ import GameLoop from "./GameLoop";
 
 describe("GameLoop Tests", () => {
   describe("GameLoop should", () => {
-    //TODO GameLoop tess here
     let gameLoop;
     beforeEach(() => {
       gameLoop = GameLoop(null);
@@ -66,7 +65,7 @@ describe("GameLoop Tests", () => {
         payload: { playerType: "human", coords: [5, 5] },
       });
 
-      expect(gameLoopState.player1.attacksList.length).toBe(1);
+      //expect(gameLoopState.player1.attacksList.length).toBe(1);
       expect(gameLoopState.nextPlayer.name).toMatch("CPULuigi");
 
       gameLoop.gameAction({
@@ -125,7 +124,7 @@ describe("GameLoop Tests", () => {
     test("isMoveLegal should return the correct value", () => {
       gameLoop.gameAction({ type: "gameLoop/placeShipsRandomly" });
       gameLoop.gameAction({ type: "gameLoop/startGame" });
-      expect(gameLoop.isMoveLegal(gameLoopState.player1, [5, 5])).toBe(true);
+      expect(gameLoop.isStrikeLegal(gameLoopState.player1, [5, 5])).toBe(true);
       gameLoop.gameAction({
         type: "gameLoop/strike",
         payload: { playerType: "human", coords: [5, 5] },
@@ -138,10 +137,53 @@ describe("GameLoop Tests", () => {
         type: "gameLoop/strike",
         payload: { playerType: "human", coords: [9, 9] },
       });
-      expect(gameLoop.isMoveLegal(gameLoopState.player2, [5, 5])).toBe(false);
-      expect(gameLoop.isMoveLegal(gameLoopState.player2, [0, 0])).toBe(false);
-      expect(gameLoop.isMoveLegal(gameLoopState.player2, [9, 9])).toBe(false);
-      expect(gameLoop.isMoveLegal(gameLoopState.player2, [5, 6])).toBe(true);
+      expect(gameLoop.isStrikeLegal(gameLoopState.player2, [5, 5])).toBe(false);
+      expect(gameLoop.isStrikeLegal(gameLoopState.player2, [0, 0])).toBe(false);
+      expect(gameLoop.isStrikeLegal(gameLoopState.player2, [9, 9])).toBe(false);
+      expect(gameLoop.isStrikeLegal(gameLoopState.player2, [5, 6])).toBe(true);
+    });
+
+    test("gameLoop/placeShip passed to gameAction should correctly place a ship", () => {
+      gameLoop.gameAction({
+        type: "gameLoop/placeShip",
+        payload: { shipLength: 4, coords: [5, 5], orient: "hor" },
+      });
+      expect(gameLoopState.player1.boardMap[5][6]).toBe("0BS");
+      expect(gameLoopState.player1.boardMap[5][7]).toBe("0BS");
+      expect(gameLoopState.player1.boardMap[5][8]).toBe("0BS");
+      expect(gameLoopState.player1.boardMap[5][5]).toBe("0BS");
+
+      gameLoop.gameAction({
+        type: "gameLoop/placeShip",
+        payload: { shipLength: 4, coords: [3, 7], orient: "hor" },
+      });
+      expect(gameLoopState.error && gameLoopState.error.message).toMatch(
+        "Ship placement unsuccessful!"
+      );
+    });
+
+    test("gameLoop/placeShip passes to gameAction should return a error property  in the state passes to stateUpdateHandler ", () => {
+      gameLoop.gameAction({
+        type: "gameLoop/placeShip",
+        payload: { shipLength: 4, coords: [5, 5], orient: "hor" },
+      });
+      expect(gameLoopState.error).toBeNull();
+      gameLoop.gameAction({
+        type: "gameLoop/placeShip",
+        payload: { shipLength: 5, coords: [3, 6], orient: "vert" },
+      });
+      expect(gameLoopState.error && gameLoopState.error.message).toMatch(
+        "Ship placement unsuccessful!"
+      );
+    });
+
+    test("isShipPlacementLegal should return the correct result", () => {
+      const result1 = gameLoop.isShipPlacementLegal(5, [3, 3], "hor");
+      const result2 = gameLoop.isShipPlacementLegal(5, [3, 6], "hor");
+      const result3 = gameLoop.isShipPlacementLegal(5, [6, 3], "ver");
+      expect(result1).toBe(true);
+      expect(result2).toBe(false);
+      expect(result3).toBe(false);
     });
   });
 });

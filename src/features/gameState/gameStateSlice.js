@@ -5,6 +5,7 @@ const initialState = {
   player2: null,
   gameState: "",
   nextPlayer: "",
+  lastCPUStrike: null,
   winner: null,
 };
 
@@ -13,7 +14,13 @@ export const gameStateSlice = createSlice({
   initialState,
   reducers: {
     updateState: (state, action) => {
-      state = action.payload;
+      state.player1 = action.payload.player1;
+      state.player2 = action.payload.player2;
+      state.gameState = action.payload.gameState;
+      state.nextPlayer = action.payload.nextPlayer;
+      state.winner = action.payload.winner;
+      state.lastCPUStrike = action.payload.lastCPUStrike;
+      action.payload.error && (state.error = action.payload.error);
     },
   },
 });

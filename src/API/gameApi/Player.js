@@ -1,11 +1,12 @@
 import Gameboard from "./Gameboard";
-import { getRandomInt, arrayMatch, isInRange } from "./helperFunc";
+import {arrayMatch, isInRange } from "./helperFunc";
 
 const Player = (playerName, isCPUplayer = false) => {
   const name = playerName;
   const isComputerPlayer = isCPUplayer;
   const gameboard = Gameboard();
-  const attacksList = [];
+  let attacksList = [];
+
   const attack = (player, coords) => {
     if (!Array.isArray(coords)) {
       return;
@@ -14,25 +15,45 @@ const Player = (playerName, isCPUplayer = false) => {
       return;
     }
     player.gameboard.receiveAttack([...coords]);
-    attacksList.push([...coords]);
+    const newAttacksList = [...attacksList];
+    newAttacksList.push([...coords]);
+    attacksList = [...newAttacksList];
+    //console.log(attacksList);
+  };
+
+  const isStrikeLegal = (coords) => {
+    const [x, y] = coords;
+    if (!isInRange(x, 0, 9) || !isInRange(y, 0, 9)) {
+      return false;
+    }
+    const attackListMatch = attacksList.filter((attackCoords) =>
+      arrayMatch(attackCoords, coords)
+    );
+    if (attackListMatch.length === 0) {
+      return true;
+    }
+    return false;
   };
 
   let cpuAttack;
   if (isCPUplayer) {
-    cpuAttack = (player) => {
-      if (!player.gameboard) {
-        return;
-      }
-      if (attacksList.length >= 100) {
-        return;
-      }
-      let randomCoords = [getRandomInt(0, 9), getRandomInt(0, 9)]; 
-      while (attacksList.find((hit) => arrayMatch(hit, [...randomCoords]))) {
-        randomCoords = [getRandomInt(0, 9), getRandomInt(0, 9)];
-      }
-      player.gameboard.receiveAttack([...randomCoords]);
-      attacksList.push([...randomCoords]);
-    };
+    cpuAttack = attack;
+    //(player, coords) => {
+    //   if (!player.gameboard) {
+    //     return;
+    //   }
+    //   if (attacksList.length >= 100) {
+    //     return;
+    //   }
+    //   let randomCoords = [getRandomInt(0, 9), getRandomInt(0, 9)];
+    //   while (attacksList.find((hit) => arrayMatch(hit, [...randomCoords]))) {
+    //     randomCoords = [getRandomInt(0, 9), getRandomInt(0, 9)];
+    //   }
+    //   player.gameboard.receiveAttack([...randomCoords]);
+    //   const newAttacksList = [...attacksList];
+    //   newAttacksList.push([...randomCoords]);
+    //   attacksList = [...newAttacksList];
+    // };
   }
 
   return {
@@ -42,6 +63,7 @@ const Player = (playerName, isCPUplayer = false) => {
     attack,
     cpuAttack,
     attacksList,
+    isStrikeLegal,
   };
 };
 
