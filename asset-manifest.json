@@ -1,8 +1,8 @@
 {
   "files": {
     "main.css": "/Battleships-Game/static/css/main.3f35ddd9.chunk.css",
-    "main.js": "/Battleships-Game/static/js/main.cd9aa13e.chunk.js",
-    "main.js.map": "/Battleships-Game/static/js/main.cd9aa13e.chunk.js.map",
+    "main.js": "/Battleships-Game/static/js/main.03a78ec7.chunk.js",
+    "main.js.map": "/Battleships-Game/static/js/main.03a78ec7.chunk.js.map",
     "runtime-main.js": "/Battleships-Game/static/js/runtime-main.f2d73b88.js",
     "runtime-main.js.map": "/Battleships-Game/static/js/runtime-main.f2d73b88.js.map",
     "static/js/2.202b6e65.chunk.js": "/Battleships-Game/static/js/2.202b6e65.chunk.js",
@@ -26,6 +26,6 @@
     "static/js/runtime-main.f2d73b88.js",
     "static/js/2.202b6e65.chunk.js",
     "static/css/main.3f35ddd9.chunk.css",
-    "static/js/main.cd9aa13e.chunk.js"
+    "static/js/main.03a78ec7.chunk.js"
   ]
 }
